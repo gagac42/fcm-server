@@ -1,49 +1,50 @@
 const express = require('express');
 const admin = require('firebase-admin');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const app = express();
-app.get("/", (req, res) => {
-  res.send("OK");
+
+// 1) Health‑check
+app.get('/', (req, res) => {
+  res.send('OK');
 });
+
+// 2) Načítame JSON telo
+app.use(express.json());
+
+// 3) CORS (aby Postman mohol volať)
 app.use(cors());
-app.use(bodyParser.json());
 
+// Init Firebase
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
-app.post('/sendNotification', async (req, res) => {
-  const { token, messageText } = req.body;
+// 4) Debug wrapper pred validáciou
+app.post('/sendNotification', (req, res) => {
+  console.log('🔥 REQ.BODY:', req.body);
 
+  const { token, messageText } = req.body;
   if (!token || !messageText) {
+    console.error('❌ Missing token or messageText:', req.body);
     return res.status(400).json({ error: 'Missing token or messageText' });
   }
 
-  const message = {
-    token: token,
-    notification: {
-      title: 'Nová správa!',
-      body: messageText
-    },
-    android: {
-      priority: "high"
-    }
-  };
-
-  try {
-    const response = await admin.messaging().send(message);
-    console.log('Notifikácia odoslaná:', response);
-    res.status(200).json({ success: true, response });
-  } catch (error) {
-    console.error('Chyba pri odoslaní:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
+  // pôvodná logika
+  const message = { token, notification: { title: 'Nová správa!', body: messageText }, android: { priority: 'high' } };
+  admin.messaging().send(message)
+    .then(response => {
+      console.log('✅ FCM sent:', response);
+      res.json({ success: true, response });
+    })
+    .catch(err => {
+      console.error('❌ FCM error:', err);
+      res.status(500).json({ error: err.message });
+    });
 });
 
+// 5) Štart servera
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server beží na porte ${PORT}`);
