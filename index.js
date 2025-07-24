@@ -46,8 +46,17 @@ app.post('/sendNotification', async (req, res) => {
 
   const message = {
     token,
-    notification: { title: 'Nová správa!', body: messageText },
-    android: { priority: 'high' }
+    notification: {
+      title: 'Nová správa!',
+      body: messageText
+    },
+    android: {
+      priority: 'high',
+      notification: {
+        sound: 'default',
+        channel_id: 'default' // <- DÔLEŽITÉ PRE MOBIL
+      }
+    }
   };
 
   try {
