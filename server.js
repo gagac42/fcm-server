@@ -25,15 +25,19 @@ app.post('/send', async (req, res) => {
   };
 
   try {
+    console.log('RAW PRIVATE KEY:', process.env.GOOGLE_PRIVATE_KEY);
+    console.log('PARSED PRIVATE KEY:', process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'));
+
     const auth = new GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
-       private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
       },
       scopes: ['https://www.googleapis.com/auth/firebase.messaging']
     });
 
     const accessToken = await auth.getAccessToken();
+
     const response = await fetch(`https://fcm.googleapis.com/v1/projects/${process.env.GOOGLE_PROJECT_ID}/messages:send`, {
       method: 'POST',
       headers: {
