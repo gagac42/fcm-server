@@ -18,8 +18,8 @@ app.post('/send', async (req, res) => {
     message: {
       token,
       notification: {
-        title: title || "Nová správa",
-        body: body || "Niečo prišlo!"
+        title: title || 'Nová správa',
+        body: body || 'Niečo prišlo!'
       }
     }
   };
@@ -28,16 +28,13 @@ app.post('/send', async (req, res) => {
     const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
 
     const auth = new GoogleAuth({
-      credentials: {
-        ...credentials,
-        private_key: credentials.private_key.replace(/\\n/g, '\n')
-      },
+      credentials,
       scopes: ['https://www.googleapis.com/auth/firebase.messaging']
     });
 
     const accessToken = await auth.getAccessToken();
 
-    const response = await fetch(`https://fcm.googleapis.com/v1/projects/${process.env.GOOGLE_PROJECT_ID}/messages:send`, {
+    const response = await fetch(`https://fcm.googleapis.com/v1/projects/${credentials.project_id}/messages:send`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -49,7 +46,7 @@ app.post('/send', async (req, res) => {
     const data = await response.json();
     res.status(response.status).json(data);
   } catch (err) {
-    console.error("Chyba pri odosielaní:", err);
+    console.error('Chyba pri odosielaní:', err);
     res.status(500).json({ error: err.message });
   }
 });
