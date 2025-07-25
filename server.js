@@ -25,16 +25,19 @@ app.post('/send', async (req, res) => {
   };
 
   try {
+    // ✅ Načítame celý JSON objekt z environment variable
+    const serviceAccount = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+
     const auth = new GoogleAuth({
       credentials: {
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+        client_email: serviceAccount.client_email,
+        private_key: serviceAccount.private_key
       },
       scopes: ['https://www.googleapis.com/auth/firebase.messaging']
     });
 
     const accessToken = await auth.getAccessToken();
-    const response = await fetch(`https://fcm.googleapis.com/v1/projects/${process.env.GOOGLE_PROJECT_ID}/messages:send`, {
+    const response = await fetch(`https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
