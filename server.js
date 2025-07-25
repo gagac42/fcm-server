@@ -18,7 +18,9 @@ app.get('/debug', (req, res) => {
     const creds = JSON.parse(process.env.GOOGLE_CREDENTIALS);
     return res.json({ loaded: true, keys: Object.keys(creds) });
   } catch (e) {
-    return res.status(500).json({ error: `"${process.env.GOOGLE_CREDENTIALS}" is not valid JSON` });
+    return res
+      .status(500)
+      .json({ error: `"${process.env.GOOGLE_CREDENTIALS}" is not valid JSON` });
   }
 });
 
@@ -50,11 +52,13 @@ app.post('/send', async (req, res) => {
     const auth = new GoogleAuth({
       credentials: {
         client_email: serviceAccount.client_email,
+        // TU sme pridali .replace na prekonvertovanie "\n" na reálne nové riadky:
         private_key: serviceAccount.private_key.replace(/\\n/g, '\n')
       },
       scopes: ['https://www.googleapis.com/auth/firebase.messaging']
     });
     const accessToken = await auth.getAccessToken();
+    console.log('✅ Got access token');
 
     // POŠLIŤ NA FCM HTTP v1 API
     const fcmRes = await fetch(
@@ -70,10 +74,11 @@ app.post('/send', async (req, res) => {
     );
 
     const data = await fcmRes.json();
+    console.log('✅ FCM response status:', fcmRes.status, data);
     return res.status(fcmRes.status).json(data);
 
   } catch (err) {
-    console.error('Chyba pri odosielaní:', err);
+    console.error('🔥 Chyba pri odosielaní FCM:', err.stack || err);
     return res.status(500).json({ error: err.message });
   }
 });
