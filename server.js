@@ -7,54 +7,74 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// ---------------------- DEBUG ROUTE ----------------------
+const PORT = process.env.PORT || 3000;
+
+// DEBUG ROUTE – over, že premenná je OK
 app.get('/debug', (req, res) => {
   if (!process.env.GOOGLE_CREDENTIALS) {
-    return res
-      .status(500)
-      .json({ error: 'GOOGLE_CREDENTIALS is undefined in process.env' });
+    return res.status(500).json({ error: 'GOOGLE_CREDENTIALS is undefined' });
   }
   try {
     const creds = JSON.parse(process.env.GOOGLE_CREDENTIALS);
-    return res.json({
-      loaded: true,
-      keys: Object.keys(creds)
-    });
+    return res.json({ loaded: true, keys: Object.keys(creds) });
   } catch (e) {
-    return res
-      .status(500)
-      .json({ error: `"${process.env.GOOGLE_CREDENTIALS}" is not valid JSON` });
+    return res.status(500).json({ error: `"${process.env.GOOGLE_CREDENTIALS}" is not valid JSON` });
   }
 });
-// ---------------------------------------------------------
-
-const PORT = process.env.PORT || 3000;
 
 app.post('/send', async (req, res) => {
   const { token, title, body } = req.body;
   if (!token) return res.status(400).json({ error: 'Missing token' });
 
-  const serviceAccount = JSON.parse(process.env.GOOGLE_CREDENTIALS);
-  const auth = new GoogleAuth({
-    credentials: {
-      client_email: serviceAccount.client_email,
-      private_key: serviceAccount.private_key.replace(/\\n/g, '\n'),
-    },
-    scopes: ['https://www.googleapis.com/auth/firebase.messaging'],
-  });
+  // Načítame service account
+  let serviceAccount;
+  try {
+    serviceAccount = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+  } catch (e) {
+    return res.status(500).json({ error: 'Invalid GOOGLE_CREDENTIALS JSON' });
+  }
+
+  // Pripravíme FCM správu
+  const message = {
+    message: {
+      token,
+      notification: {
+        title: title || 'Nová správa',
+        body: body || 'Niečo prišlo!'
+      }
+    }
+  };
 
   try {
+    // Získame OAuth2 token
+    const auth = new GoogleAuth({
+      credentials: {
+        client_email: serviceAccount.client_email,
+        private_key: serviceAccount.private_key.replace(/\\n/g, '\n')
+      },
+      scopes: ['https://www.googleapis.com/auth/firebase.messaging']
+    });
     const accessToken = await auth.getAccessToken();
-    const response = await fetch(
-      `https://fcm-server-2.onrender.com/send`,
+
+    // POŠLIŤ NA FCM HTTP v1 API
+    const fcmRes = await fetch(
+      `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`,
       {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(message)
       }
     );
-    // ...
-    res.json({ success: true });
+
+    const data = await fcmRes.json();
+    return res.status(fcmRes.status).json(data);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Chyba pri odosielaní:', err);
+    return res.status(500).json({ error: err.message });
   }
 });
 
