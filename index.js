@@ -29,8 +29,8 @@ async function getAccessToken() {
   return tokenResponse.token;
 }
 
-// Endpoint prijímajúci volanie z PlayFab Cloud Script
-app.post('/sendNotification', async (req, res) => {
+// 🔔 Zjednotený endpoint pre Cloud Script aj Postman test
+app.post('/send', async (req, res) => {
   try {
     const { fcmToken, title, body, data } = req.body;
     const accessToken = await getAccessToken();
@@ -53,7 +53,7 @@ app.post('/sendNotification', async (req, res) => {
 
     res.status(200).json({ result: 'ok' });
   } catch (err) {
-    console.error(err.response?.data || err.message);
+    console.error("❌ Send error:", err.response?.data || err.message);
     res.status(500).json({ error: err.response?.data || err.message });
   }
 });
