@@ -37,24 +37,28 @@ app.post('/sendNotification', async (req, res) => {
     const collapseKey = `msg_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
     const message = {
-      message: {
-        token: fcmToken,
-        notification: {
-          title: title,
-          body: body
-        },
-        android: {
-          priority: "high",
-          ttl: "86400s", // max. 24 hodín uchovania
-          collapse_key: collapseKey, // ⬅️ pridané
-          notification: {
-            icon: "notification_icon", // názov ikonky bez prípony
-            defaultSound: true
-          }
-        },
-        data: data || {}
+  message: {
+    token: fcmToken,
+    // ❌ Zmažeme notification blok – posielame len data
+    android: {
+      priority: "high",
+      ttl: "86400s", // max. 24 hodín
+      notification: {
+        icon: "notification_icon",
+        defaultSound: true
       }
-    };
+    },
+    data: {
+      title: title,
+      body: body,
+      fromPlayFabId: data?.fromPlayFabId || "",
+      messageType: "private",
+      icon: "notification_icon",
+      collapse_key: `msg_${Date.now()}_${Math.floor(Math.random() * 1000)}` // Unikátny
+    }
+  }
+};
+
 
     await axios.post(url, message, {
       headers: {
