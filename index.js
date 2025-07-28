@@ -1,4 +1,3 @@
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const { GoogleAuth } = require('google-auth-library');
@@ -7,12 +6,9 @@ const axios = require('axios');
 const app = express();
 app.use(bodyParser.json());
 
-// Názov FCM scope pre HTTP v1
 const SCOPES = ['https://www.googleapis.com/auth/firebase.messaging'];
-// Tvoje FCM projektové ID (z Firebase console)
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
 
-// Funkcia na získanie access tokenu z service account JSON
 async function getAccessToken() {
   const auth = new GoogleAuth({
     scopes: SCOPES,
@@ -30,17 +26,28 @@ async function getAccessToken() {
   return tokenResponse.token;
 }
 
-// ✅ Endpoint prijímajúci volanie z PlayFab Cloud Script
 app.post('/sendNotification', async (req, res) => {
   try {
     const { fcmToken, title, body, data } = req.body;
     const accessToken = await getAccessToken();
 
     const url = `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`;
+
     const message = {
       message: {
         token: fcmToken,
-        notification: { title, body },
+        notification: {
+          title: title,
+          body: body
+        },
+        android: {
+          priority: "high",
+          ttl: "86400s", // max. 24 hodín uchovania
+          notification: {
+            icon: "notification_icon", // názov ikonky bez prípony
+            defaultSound: true
+          }
+        },
         data: data || {}
       }
     };
@@ -59,6 +66,5 @@ app.post('/sendNotification', async (req, res) => {
   }
 });
 
-// ✅ Server štart
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
