@@ -33,32 +33,24 @@ app.post('/sendNotification', async (req, res) => {
 
     const url = `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`;
 
-    // ✅ Generuj jedinečný collapse_key pre každú správu
-    const collapseKey = `msg_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-
     const message = {
-  message: {
-    token: fcmToken,
-    // ❌ Zmažeme notification blok – posielame len data
-    android: {
-      priority: "high",
-      ttl: "86400s", // max. 24 hodín
-      notification: {
-        icon: "notification_icon",
-        defaultSound: true
+      message: {
+        token: fcmToken,
+        notification: {
+          title: title,
+          body: body
+        },
+        android: {
+          priority: "high",
+          ttl: "86400s", // max. 24 hodín uchovania
+          notification: {
+            icon: "notification_icon", // názov ikonky bez prípony
+            defaultSound: true
+          }
+        },
+        data: data || {}
       }
-    },
-    data: {
-      title: title,
-      body: body,
-      fromPlayFabId: data?.fromPlayFabId || "",
-      messageType: "private",
-      icon: "notification_icon",
-      collapse_key: `msg_${Date.now()}_${Math.floor(Math.random() * 1000)}` // Unikátny
-    }
-  }
-};
-
+    };
 
     await axios.post(url, message, {
       headers: {
