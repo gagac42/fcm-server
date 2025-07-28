@@ -33,6 +33,9 @@ app.post('/sendNotification', async (req, res) => {
 
     const url = `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`;
 
+    // ✅ Generuj jedinečný collapse_key pre každú správu
+    const collapseKey = `msg_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
     const message = {
       message: {
         token: fcmToken,
@@ -43,6 +46,7 @@ app.post('/sendNotification', async (req, res) => {
         android: {
           priority: "high",
           ttl: "86400s", // max. 24 hodín uchovania
+          collapse_key: collapseKey, // ⬅️ pridané
           notification: {
             icon: "notification_icon", // názov ikonky bez prípony
             defaultSound: true
