@@ -33,17 +33,17 @@ app.post('/sendNotification', async (req, res) => {
 
     const url = `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`;
 
-   const collapseKey = `${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  const collapseKey = `msg_${Date.now()}_${Math.floor(Math.random() * 100000)}`; // unikátne pre každú správu
 
 const message = {
   message: {
     token: fcmToken,
     notification: {
-      title: title,
-      body: body
+      title,
+      body
     },
     android: {
-      collapseKey: collapseKey,  // sem to patrí
+      collapseKey: collapseKey,
       priority: "high",
       ttl: "86400s",
       notification: {
@@ -54,6 +54,7 @@ const message = {
     data: data || {}
   }
 };
+
 
 
     await axios.post(url, message, {
