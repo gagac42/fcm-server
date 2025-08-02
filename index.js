@@ -47,7 +47,7 @@ const message = {
       priority: "high",
       ttl: "86400s",
       notification: {
-        icon: "notification_icon",
+       
         defaultSound: true
       }
     },
