@@ -38,22 +38,28 @@ app.post('/sendNotification', async (req, res) => {
 const message = {
   message: {
     token: fcmToken,
-    notification: {
-      title,
-      body
-    },
+    notification: { title, body },
+    data: data || {},
     android: {
-      collapseKey: collapseKey,
+      collapse_key: collapseKey,
       priority: "high",
       ttl: "86400s",
       notification: {
-       
-        defaultSound: true
+        sound: "default"
       }
     },
-    data: data || {}
+    apns: {
+      headers: {
+        "apns-priority": "10",
+        "apns-expiration": "" + (Math.floor(Date.now()/1000) + 86400)
+      },
+      payload: {
+        aps: { sound: "default" }
+      }
+    }
   }
 };
+
 
 
 
