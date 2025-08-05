@@ -33,7 +33,7 @@ app.post('/sendNotification', async (req, res) => {
 
     const url = `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`;
 
-  const collapseKey = `msg_${Date.now()}_${Math.floor(Math.random() * 100000)}`; // unikátne pre každú správu
+ 
 
 const message = {
   message: {
@@ -41,7 +41,6 @@ const message = {
     notification: { title, body },
     data: data || {},
     android: {
-      collapse_key: collapseKey,
       priority: "high",
       ttl: "86400s",
       notification: {
