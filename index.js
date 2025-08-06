@@ -44,6 +44,7 @@ const message = {
       priority: "high",
       ttl: "86400s",
       notification: {
+      requireInteraction: "true",
         sound: "default"
       }
     },
